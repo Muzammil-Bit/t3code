@@ -54,11 +54,9 @@ esac
 
 const encodeSettings = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
 
-const prepareHome = Effect.fn("startApp.prepareHome")(function* (
-  home: string,
-  node: string,
-  checkout: string,
-) {
+export const prepareHome = Effect.fn("startApp.prepareHome")(function* (home: string) {
+  const node = yield* HostProcess.ExecutablePath;
+  const checkout = yield* HostProcess.WorkingDirectory;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.remove(home, { recursive: true, force: true });
@@ -106,7 +104,7 @@ const prepareHome = Effect.fn("startApp.prepareHome")(function* (
 });
 
 /** Starts a process in the caller's scope and hands each line it prints to `onLine`. */
-const start = Effect.fn("startApp.start")(function* (input: {
+export const start = Effect.fn("startApp.start")(function* (input: {
   readonly cwd: string;
   readonly command: string;
   readonly args: ReadonlyArray<string>;
@@ -146,7 +144,7 @@ const startApp = Effect.fn("startApp")(function* (input: {
   const node = yield* HostProcess.ExecutablePath;
   const checkout = yield* HostProcess.WorkingDirectory;
   const hostEnvironment = yield* HostProcess.Environment;
-  yield* prepareHome(input.home, node, checkout);
+  yield* prepareHome(input.home);
   const env = {
     ...hostEnvironment,
     PATH: `${path.join(input.home, "bin")}:${hostEnvironment.PATH ?? ""}`,
